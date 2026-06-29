@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Carga de Remito</title>
+  <style>
+    body { font-family: -apple-system, sans-serif; max-width: 500px; margin: 20px auto; padding: 20px; background: #f5f5f5; }
+    h1 { text-align: center; color: #333; }
+    label { display: block; margin: 15px 0 5px; font-weight: bold; }
+    input[type="file"] { width: 100%; padding: 10px; border: 2px dashed #ccc; border-radius: 8px; background: white; }
+    button { width: 100%; padding: 15px; background: #4CAF50; color: white; border: none; border-radius: 8px; font-size: 16px; margin-top: 20px; cursor: pointer; }
+    button:disabled { background: #999; }
+    #status { margin-top: 15px; padding: 10px; border-radius: 8px; text-align: center; }
+    .success { background: #d4edda; color: #155724; }
+    .error { background: #f8d7da; color: #721c24; }
+    .loading { background: #fff3cd; color: #856404; }
+    #gps-status { font-size: 14px; color: #666; text-align: center; margin: 10px 0; }
+  </style>
+</head>
+<body>
+  <h1>📋 Carga de Remito</h1>
+  <div id="gps-status">📍 Obteniendo ubicación...</div>
+  
+  <form id="form">
+    <label for="foto">Foto del Remito</label>
+    <input type="file" id="foto" name="foto" accept="image/*" capture="environment" required>
+    
+    <button type="submit" id="btn">Enviar Remito</button>
+  </form>
+  
+  <div id="status"></div>
+
+  <script>
+    const WEBHOOK_URL = "PEGA_AQUI_TU_URL_DE_WEBHOOK";
+    
+    let coords = { lat: null, lng: null };
+    
+    // Pedir ubicación al cargar la página
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          coords.lat = pos.coords.latitude;
+          coords.lng = pos.coords.longitude;
+          document.getElementById('gps-status').textContent = `📍 Ubicación: ${coords.lat.toFixed(5)}, ${coords.lng.toFixed(5)}`;
+        },
+        (err) => {
+          document.getElementById('gps-status').textContent = '⚠️ Sin ubicación (permiso denegado)';
+        },
+        { enableHighAccuracy: true, timeout: 10000 }
+      );
+    }
+    
+    document.getElementById('form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('btn');
+      const status = document.getElementById('status');
+      const foto = document.getElementById('foto').files[0];
+      
+      if (!foto) return;
+      
+      btn.disabled = true;
+      btn.textContent = 'Enviando...';
+      status.className = 'loading';
+      status.textContent = '⏳ Subiendo remito...';
+      
+      const formData = new FormData();
+      formData.append('Foto_del_Remito', foto);
+      formData.append('latitud', coords.lat || '');
+      formData.append('longitud', coords.lng || '');
+      
+      try {
+        const res = await fetch(WEBHOOK_URL, { method: 'POST', body: formData });
+        if (!res.ok) throw new Error('Error en el servidor');
+        status.className = 'success';
+        status.textContent = '✅ Remito enviado correctamente';
+        document.getElementById('form').reset();
+        btn.textContent = 'Enviar Remito';
+        btn.disabled = false;
+      } catch (err) {
+        status.className = 'error';
+        status.textContent = '❌ Error: ' + err.message;
+        btn.textContent = 'Enviar Remito';
+        btn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
