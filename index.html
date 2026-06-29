@@ -10,23 +10,26 @@
     label { display: block; margin: 15px 0 5px; font-weight: bold; }
     input[type="file"] { width: 100%; padding: 10px; border: 2px dashed #ccc; border-radius: 8px; background: white; }
     button { width: 100%; padding: 15px; background: #4CAF50; color: white; border: none; border-radius: 8px; font-size: 16px; margin-top: 20px; cursor: pointer; }
-    button:disabled { background: #999; }
+    button:disabled { background: #999; cursor: not-allowed; }
     #status { margin-top: 15px; padding: 10px; border-radius: 8px; text-align: center; }
     .success { background: #d4edda; color: #155724; }
     .error { background: #f8d7da; color: #721c24; }
     .loading { background: #fff3cd; color: #856404; }
-    #gps-status { font-size: 14px; color: #666; text-align: center; margin: 10px 0; }
+    #gps-status { font-size: 14px; text-align: center; margin: 10px 0; padding: 10px; border-radius: 8px; }
+    .gps-ok { background: #d4edda; color: #155724; }
+    .gps-fail { background: #f8d7da; color: #721c24; font-weight: bold; }
+    .gps-loading { background: #fff3cd; color: #856404; }
   </style>
 </head>
 <body>
   <h1>📋 Carga de Remito</h1>
-  <div id="gps-status">📍 Obteniendo ubicación...</div>
+  <div id="gps-status" class="gps-loading">📍 Obteniendo ubicación...</div>
   
   <form id="form">
     <label for="foto">Foto del Remito</label>
-    <input type="file" id="foto" name="foto" accept="image/*" capture="environment" required>
+    <input type="file" id="foto" name="foto" accept="image/*" required>
     
-    <button type="submit" id="btn">Enviar Remito</button>
+    <button type="submit" id="btn" disabled>Enviar Remito</button>
   </form>
   
   <div id="status"></div>
@@ -35,25 +38,47 @@
     const WEBHOOK_URL = "https://diemar.app.n8n.cloud/webhook/subir-remito";
     
     let coords = { lat: null, lng: null };
+    const gpsStatus = document.getElementById('gps-status');
+    const btn = document.getElementById('btn');
     
-    // Pedir ubicación al cargar la página
-    if (navigator.geolocation) {
+    function pedirUbicacion() {
+      gpsStatus.className = 'gps-loading';
+      gpsStatus.textContent = '📍 Obteniendo ubicación...';
+      
+      if (!navigator.geolocation) {
+        gpsStatus.className = 'gps-fail';
+        gpsStatus.innerHTML = '❌ Tu navegador no soporta GPS. No podés enviar remitos.';
+        btn.disabled = true;
+        return;
+      }
+      
       navigator.geolocation.getCurrentPosition(
         (pos) => {
           coords.lat = pos.coords.latitude;
           coords.lng = pos.coords.longitude;
-          document.getElementById('gps-status').textContent = `📍 Ubicación: ${coords.lat.toFixed(5)}, ${coords.lng.toFixed(5)}`;
+          gpsStatus.className = 'gps-ok';
+          gpsStatus.textContent = `📍 Ubicación: ${coords.lat.toFixed(5)}, ${coords.lng.toFixed(5)}`;
+          btn.disabled = false;
         },
         (err) => {
-          document.getElementById('gps-status').textContent = '⚠️ Sin ubicación (permiso denegado)';
+          gpsStatus.className = 'gps-fail';
+          gpsStatus.innerHTML = '⚠️ <strong>UBICACIÓN OBLIGATORIA</strong><br>Tenés que permitir el acceso a tu ubicación para enviar el remito.<br><br>Click en el candado 🔒 al lado de la URL → Ubicación → Permitir. Después recargá la página.';
+          btn.disabled = true;
         },
         { enableHighAccuracy: true, timeout: 10000 }
       );
     }
     
+    pedirUbicacion();
+    
     document.getElementById('form').addEventListener('submit', async (e) => {
       e.preventDefault();
-      const btn = document.getElementById('btn');
+      
+      if (!coords.lat || !coords.lng) {
+        alert('⚠️ Tenés que permitir el acceso a tu ubicación antes de enviar el remito.');
+        return;
+      }
+      
       const status = document.getElementById('status');
       const foto = document.getElementById('foto').files[0];
       
@@ -66,8 +91,8 @@
       
       const formData = new FormData();
       formData.append('Foto_del_Remito', foto);
-      formData.append('latitud', coords.lat || '');
-      formData.append('longitud', coords.lng || '');
+      formData.append('latitud', coords.lat);
+      formData.append('longitud', coords.lng);
       
       try {
         const res = await fetch(WEBHOOK_URL, { method: 'POST', body: formData });
