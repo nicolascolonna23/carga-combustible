@@ -3,36 +3,229 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Carga de Remito</title>
+  <title>Carga de Remito | Diemar</title>
   <style>
-    body { font-family: -apple-system, sans-serif; max-width: 500px; margin: 20px auto; padding: 20px; background: #f5f5f5; }
-    h1 { text-align: center; color: #333; }
-    label { display: block; margin: 15px 0 5px; font-weight: bold; }
-    input[type="file"] { width: 100%; padding: 10px; border: 2px dashed #ccc; border-radius: 8px; background: white; }
-    button { width: 100%; padding: 15px; background: #4CAF50; color: white; border: none; border-radius: 8px; font-size: 16px; margin-top: 20px; cursor: pointer; }
-    button:disabled { background: #999; cursor: not-allowed; }
-    #status { margin-top: 15px; padding: 10px; border-radius: 8px; text-align: center; }
-    .success { background: #d4edda; color: #155724; }
-    .error { background: #f8d7da; color: #721c24; }
-    .loading { background: #fff3cd; color: #856404; }
-    #gps-status { font-size: 14px; text-align: center; margin: 10px 0; padding: 10px; border-radius: 8px; }
-    .gps-ok { background: #d4edda; color: #155724; }
-    .gps-fail { background: #f8d7da; color: #721c24; font-weight: bold; }
-    .gps-loading { background: #fff3cd; color: #856404; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 100%);
+      color: #e0e0e0;
+      min-height: 100vh;
+      padding: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .container {
+      width: 100%;
+      max-width: 480px;
+      background: #1e1e1e;
+      border-radius: 16px;
+      padding: 32px 24px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+      border: 1px solid #2a2a2a;
+    }
+    
+    .logo {
+      display: block;
+      margin: 0 auto 24px;
+      max-width: 180px;
+      height: auto;
+    }
+    
+    h1 {
+      text-align: center;
+      font-size: 24px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: #fff;
+    }
+    
+    .subtitle {
+      text-align: center;
+      color: #888;
+      font-size: 14px;
+      margin-bottom: 28px;
+    }
+    
+    #gps-status {
+      text-align: center;
+      padding: 12px;
+      border-radius: 10px;
+      font-size: 13px;
+      margin-bottom: 20px;
+      font-weight: 500;
+    }
+    .gps-ok { background: rgba(76, 175, 80, 0.15); color: #81c784; border: 1px solid rgba(76, 175, 80, 0.3); }
+    .gps-fail { background: rgba(244, 67, 54, 0.15); color: #ef5350; border: 1px solid rgba(244, 67, 54, 0.3); }
+    .gps-loading { background: rgba(255, 193, 7, 0.15); color: #ffd54f; border: 1px solid rgba(255, 193, 7, 0.3); }
+    
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      color: #c0c0c0;
+    }
+    
+    input[type="file"] {
+      width: 100%;
+      padding: 16px;
+      border: 2px dashed #3a3a3a;
+      border-radius: 10px;
+      background: #252525;
+      color: #c0c0c0;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    input[type="file"]:hover { border-color: #4CAF50; background: #2a2a2a; }
+    input[type="file"]::-webkit-file-upload-button {
+      background: #4CAF50;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-right: 12px;
+      font-weight: 500;
+    }
+    
+    button {
+      width: 100%;
+      padding: 16px;
+      background: linear-gradient(135deg, #4CAF50, #45a049);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: 600;
+      margin-top: 20px;
+      cursor: pointer;
+      transition: all 0.2s;
+      letter-spacing: 0.5px;
+    }
+    button:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 20px rgba(76, 175, 80, 0.3);
+    }
+    button:disabled {
+      background: #3a3a3a;
+      color: #666;
+      cursor: not-allowed;
+    }
+    
+    #status {
+      margin-top: 16px;
+      padding: 12px;
+      border-radius: 10px;
+      text-align: center;
+      font-size: 14px;
+      font-weight: 500;
+    }
+    .success { background: rgba(76, 175, 80, 0.15); color: #81c784; border: 1px solid rgba(76, 175, 80, 0.3); }
+    .error { background: rgba(244, 67, 54, 0.15); color: #ef5350; border: 1px solid rgba(244, 67, 54, 0.3); }
+    .loading { background: rgba(33, 150, 243, 0.15); color: #64b5f6; border: 1px solid rgba(33, 150, 243, 0.3); }
+    
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.85);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 20px;
+      backdrop-filter: blur(8px);
+    }
+    .modal-overlay.hidden { display: none; }
+    
+    .modal {
+      background: #1e1e1e;
+      border-radius: 16px;
+      padding: 32px 24px;
+      max-width: 420px;
+      width: 100%;
+      text-align: center;
+      border: 1px solid #2a2a2a;
+      animation: slideUp 0.3s ease;
+    }
+    
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .modal-icon {
+      font-size: 56px;
+      margin-bottom: 16px;
+    }
+    
+    .modal h2 {
+      color: #fff;
+      font-size: 20px;
+      margin-bottom: 12px;
+      font-weight: 600;
+    }
+    
+    .modal p {
+      color: #aaa;
+      font-size: 14px;
+      line-height: 1.6;
+      margin-bottom: 8px;
+    }
+    
+    .modal .warning {
+      background: rgba(255, 193, 7, 0.15);
+      border: 1px solid rgba(255, 193, 7, 0.3);
+      color: #ffd54f;
+      padding: 12px;
+      border-radius: 8px;
+      margin: 16px 0;
+      font-size: 13px;
+      font-weight: 500;
+    }
+    
+    .modal button {
+      margin-top: 20px;
+    }
   </style>
 </head>
 <body>
-  <h1>📋 Carga de Remito</h1>
-  <div id="gps-status" class="gps-loading">📍 Obteniendo ubicación...</div>
   
-  <form id="form">
-    <label for="foto">Foto del Remito</label>
-    <input type="file" id="foto" name="foto" accept="image/*" required>
+  <!-- Modal de ubicación obligatoria -->
+  <div class="modal-overlay" id="modalUbicacion">
+    <div class="modal">
+      <div class="modal-icon">📍</div>
+      <h2>Acceso a Ubicación Requerido</h2>
+      <p>Para registrar el remito necesitamos saber dónde se está realizando la carga de combustible.</p>
+      <div class="warning">
+        ⚠️ El acceso a tu ubicación es <strong>OBLIGATORIO</strong> para enviar el remito.
+      </div>
+      <p>Al continuar, tu navegador te pedirá permiso para acceder al GPS. Por favor tocá <strong>"Permitir"</strong>.</p>
+      <button onclick="iniciarUbicacion()">Continuar</button>
+    </div>
+  </div>
+
+  <div class="container">
+    <img src="logo.png" alt="Diemar" class="logo">
+    <h1>Carga de Remito</h1>
+    <p class="subtitle">Sistema de registro de combustible</p>
     
-    <button type="submit" id="btn" disabled>Enviar Remito</button>
-  </form>
-  
-  <div id="status"></div>
+    <div id="gps-status" class="gps-loading">📍 Esperando ubicación...</div>
+    
+    <form id="form">
+      <label for="foto">Foto del Remito</label>
+      <input type="file" id="foto" name="foto" accept="image/*" required>
+      
+      <button type="submit" id="btn" disabled>Enviar Remito</button>
+    </form>
+    
+    <div id="status"></div>
+  </div>
 
   <script>
     const WEBHOOK_URL = "https://diemar.app.n8n.cloud/webhook/subir-remito";
@@ -40,17 +233,20 @@
     let coords = { lat: null, lng: null };
     const gpsStatus = document.getElementById('gps-status');
     const btn = document.getElementById('btn');
+    const modal = document.getElementById('modalUbicacion');
     
-    function pedirUbicacion() {
-      gpsStatus.className = 'gps-loading';
-      gpsStatus.textContent = '📍 Obteniendo ubicación...';
+    function iniciarUbicacion() {
+      modal.classList.add('hidden');
       
       if (!navigator.geolocation) {
         gpsStatus.className = 'gps-fail';
-        gpsStatus.innerHTML = '❌ Tu navegador no soporta GPS. No podés enviar remitos.';
+        gpsStatus.innerHTML = '❌ Tu navegador no soporta GPS';
         btn.disabled = true;
         return;
       }
+      
+      gpsStatus.className = 'gps-loading';
+      gpsStatus.textContent = '📍 Obteniendo ubicación...';
       
       navigator.geolocation.getCurrentPosition(
         (pos) => {
@@ -62,26 +258,23 @@
         },
         (err) => {
           gpsStatus.className = 'gps-fail';
-          gpsStatus.innerHTML = '⚠️ <strong>UBICACIÓN OBLIGATORIA</strong><br>Tenés que permitir el acceso a tu ubicación para enviar el remito.<br><br>Click en el candado 🔒 al lado de la URL → Ubicación → Permitir. Después recargá la página.';
+          gpsStatus.innerHTML = '❌ <strong>Permiso denegado</strong><br>Activá la ubicación desde el candado 🔒 al lado de la URL y recargá.';
           btn.disabled = true;
         },
-        { enableHighAccuracy: true, timeout: 10000 }
+        { enableHighAccuracy: true, timeout: 15000 }
       );
     }
-    
-    pedirUbicacion();
     
     document.getElementById('form').addEventListener('submit', async (e) => {
       e.preventDefault();
       
       if (!coords.lat || !coords.lng) {
-        alert('⚠️ Tenés que permitir el acceso a tu ubicación antes de enviar el remito.');
+        alert('⚠️ La ubicación es obligatoria para enviar el remito.');
         return;
       }
       
       const status = document.getElementById('status');
       const foto = document.getElementById('foto').files[0];
-      
       if (!foto) return;
       
       btn.disabled = true;
